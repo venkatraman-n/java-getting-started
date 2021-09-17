@@ -18,6 +18,11 @@ package com.example;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -27,6 +32,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.sql.DataSource;
+
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,25 +60,58 @@ public class Main {
     return "index";
   }
 
+  @RequestMapping("/hello")
+  String hello(Map<String, Object> model) throws IOException {
+	  OkHttpClient client = new OkHttpClient().newBuilder().build();
+		Request request = new Request.Builder()
+				.url("https://history.truedata.in/getbars?symbol=NIFTY21SEPFUT&from=210914T00:00:00&to=210915T00:36:00&response=csv&interval=1min")
+				.method("GET", null).addHeader("Authorization", "Bearer L9HqFWPRrtXD4nJFgH6EsH9vBm0Ig4R0xHiY8t36uUhdWRCXWVHllBxOZlbfLfb3k7CpCHKrPBfHL4I3dYmzPb-AKGSwpcq1JpsuHycJXH5m68NqQEJy9pmuH-u5IJrNfhq7FMt33znizbf5B8rMx2wTbYTxwm3SJWbGzx2m_zoZps7IQvy4peARziJ-kxB9f9LbUMBZX0ZB1ZR1XPJO_pJul7Cne-edJ2PCPhWqfMPv_PRNcxwCFImzfm07zUhVCucm_i9DQ_46SfY7N2ipGg").build();
+		Response response = client.newCall(request).execute();
+		String responseString = response.body().string();
+		System.out.println(responseString);
+		return responseString;
+  }
+  
+  
   @RequestMapping("/db")
   String db(Map<String, Object> model) {
-    try (Connection connection = dataSource.getConnection()) {
-      Statement stmt = connection.createStatement();
-      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-      stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-      ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
+	  
 
-      ArrayList<String> output = new ArrayList<String>();
-      while (rs.next()) {
-        output.add("Read from DB: " + rs.getTimestamp("tick"));
-      }
-
-      model.put("records", output);
-      return "db";
-    } catch (Exception e) {
-      model.put("message", e.getMessage());
-      return "error";
-    }
+	  OkHttpClient client = new OkHttpClient().newBuilder().build();
+		Request request = new Request.Builder()
+				.url("https://history.truedata.in/getbars?symbol=NIFTY21SEPFUT&from=210914T00:00:00&to=210915T00:36:00&response=csv&interval=1min")
+				.method("GET", null).addHeader("Authorization", "Bearer L9HqFWPRrtXD4nJFgH6EsH9vBm0Ig4R0xHiY8t36uUhdWRCXWVHllBxOZlbfLfb3k7CpCHKrPBfHL4I3dYmzPb-AKGSwpcq1JpsuHycJXH5m68NqQEJy9pmuH-u5IJrNfhq7FMt33znizbf5B8rMx2wTbYTxwm3SJWbGzx2m_zoZps7IQvy4peARziJ-kxB9f9LbUMBZX0ZB1ZR1XPJO_pJul7Cne-edJ2PCPhWqfMPv_PRNcxwCFImzfm07zUhVCucm_i9DQ_46SfY7N2ipGg").build();
+		Response response;
+		String responseString = "";
+		try {
+			response = client.newCall(request).execute();
+			responseString = response.body().string();
+			System.out.println(responseString);
+			model.put("records", responseString);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return responseString;
+  
+		
+//    try (Connection connection = dataSource.getConnection()) {
+//      Statement stmt = connection.createStatement();
+//      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
+//      stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
+//      ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
+//
+//      ArrayList<String> output = new ArrayList<String>();
+//      while (rs.next()) {
+//        output.add("Read from DB: " + rs.getTimestamp("tick"));
+//      }
+//
+//      model.put("records", output);
+//      return "db";
+//    } catch (Exception e) {
+//      model.put("message", e.getMessage());
+//      return "error";
+//    }
   }
 
   @Bean
